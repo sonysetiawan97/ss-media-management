@@ -18,17 +18,9 @@ npm install ss-media-library
 
 ## Usage Example
 
+### Upload Public File
+
 ```typescript
-import { StorageProviderFactory } from '@infrastructure/StorageProviderFactory';
-import { JwtTokenService } from '@infrastructure/JwtTokenService';
-import { UploadPublicFile } from '@application/UploadPublicFile';
-import { UploadPrivateFile } from '@application/UploadPrivateFile';
-
-// Create providers
-const storageProvider = StorageProviderFactory.create('local'); // or 'gcs'
-const tokenService = new JwtTokenService();
-
-// Upload public file
 const uploadPublic = new UploadPublicFile(storageProvider);
 const publicMetadata = await uploadPublic.execute({
   file: Buffer.from('hello world'),
@@ -37,8 +29,12 @@ const publicMetadata = await uploadPublic.execute({
   filename: 'file.txt',
   mimetype: 'text/plain',
 });
+console.log(publicMetadata);
+```
 
-// Upload private file
+### Upload Private File (with ownerId and tokenPayload)
+
+```typescript
 const uploadPrivate = new UploadPrivateFile(storageProvider, tokenService);
 const privateMetadata = await uploadPrivate.execute({
   file: Buffer.from('secret'),
@@ -46,11 +42,33 @@ const privateMetadata = await uploadPrivate.execute({
   path: 'uploads/',
   filename: 'secret.txt',
   mimetype: 'text/plain',
-  tokenPayload: { userId: 'user-123' },
+  ownerId: 'user-123',
+  tokenPayload: {
+    fileId: 'user-123-uuid',
+    ownerId: 'user-123',
+    appId: 'my-app',
+    exp: Math.floor(Date.now() / 1000) + 3600 // 1 hour expiry
+  }
 });
+console.log(privateMetadata);
 ```
 
-## File Metadata Example
+### Upload Private File (minimal)
+
+```typescript
+const privateMetadata = await uploadPrivate.execute({
+  file: Buffer.from('secret'),
+  bucket: 'private-bucket',
+  path: 'uploads/',
+  filename: 'secret.txt',
+  mimetype: 'text/plain',
+});
+console.log(privateMetadata);
+```
+
+## File Metadata Returned
+
+All upload methods return a `FileMetadata` object:
 
 ```json
 {
@@ -63,10 +81,16 @@ const privateMetadata = await uploadPrivate.execute({
   "path": "uploads/",
   "storageType": "local",
   "isPrivate": false,
+  "token": null,
+  "checksum": null,
   "createdAt": "2025-06-23T12:00:00Z",
-  "updatedAt": "2025-06-23T12:00:00Z"
+  "updatedAt": "2025-06-23T12:00:00Z",
+  "expiresAt": null,
+  "ownerId": "user-123"
 }
 ```
+- For private files, `token` will be a JWT string and may include claims from `tokenPayload`.
+- `expiresAt`, `checksum`, and `ownerId` are optional and may be present if set.
 
 ## Testing & Coverage
 
