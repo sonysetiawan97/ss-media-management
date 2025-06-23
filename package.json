@@ -1,4 +1,36 @@
 {
+  "name": "ss-media-library",
+  "version": "1.0.0",
+  "description": "A TypeScript media library for uploading and downloading public/private files, supporting local and Google Cloud Storage (GCS) backends.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "coverage": "jest --coverage",
+    "lint": "eslint . --ext .ts",
+    "prepare": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sonysetiawan97/ss-media-management.git"
+  },
+  "keywords": [
+    "media",
+    "typescript",
+    "upload",
+    "download",
+    "gcs",
+    "local",
+    "clean-architecture",
+    "cqrs",
+    "solid"
+  ],
+  "author": "sonysetiawanred@gmail.com",
+  "license": "MIT",
   "dependencies": {
     "@google-cloud/storage": "^7.16.0",
     "jsonwebtoken": "^9.0.2",
@@ -9,10 +41,13 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.0.3",
     "jest": "^30.0.2",
-    "ts-jest": "^29.4.0"
+    "ts-jest": "^29.4.0",
+    "typescript": "^5.4.0",
+    "eslint": "^8.57.0",
+    "@typescript-eslint/eslint-plugin": "^7.5.0",
+    "@typescript-eslint/parser": "^7.5.0"
   },
-  "scripts": {
-    "test": "jest",
-    "coverage": "jest --coverage"
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
