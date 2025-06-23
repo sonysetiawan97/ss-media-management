@@ -1,10 +1,13 @@
 /**
  * GCSStorageProvider implements StorageProvider for Google Cloud Storage.
- * (Stub implementation, to be completed)
  */
 import { StorageProvider } from '@interfaces/StorageProvider';
 import { FileMetadata } from '@domain/FileMetadata';
 import { Readable } from 'stream';
+import { Storage } from '@google-cloud/storage';
+import { v4 as uuidv4 } from 'uuid';
+
+const gcs = new Storage();
 
 export class GCSStorageProvider implements StorageProvider {
   async upload(params: {
@@ -16,8 +19,47 @@ export class GCSStorageProvider implements StorageProvider {
     isPrivate: boolean;
     ownerId?: string;
   }): Promise<FileMetadata> {
-    // TODO: Implement GCS file upload logic
-    throw new Error('Not implemented');
+    const bucket = gcs.bucket(params.bucket);
+    const destPath = params.path + params.filename;
+    const file = bucket.file(destPath);
+    const now = new Date();
+    let filesize = 0;
+    if (Buffer.isBuffer(params.file)) {
+      filesize = params.file.length;
+      await new Promise<void>((resolve, reject) => {
+        const uploadStream = file.createWriteStream({ metadata: { contentType: params.mimetype } });
+        uploadStream.on('error', reject);
+        uploadStream.on('finish', resolve);
+        uploadStream.end(params.file);
+      });
+    } else if (params.file instanceof Readable) {
+      await new Promise<void>((resolve, reject) => {
+        const uploadStream = file.createWriteStream({ metadata: { contentType: params.mimetype } });
+        (params.file as Readable).on('data', (chunk: Buffer) => {
+          filesize += chunk.length;
+        });
+        (params.file as Readable).on('error', reject);
+        uploadStream.on('error', reject);
+        uploadStream.on('finish', resolve);
+        (params.file as Readable).pipe(uploadStream);
+      });
+    } else {
+      throw new Error('Invalid file type: must be Buffer or Readable');
+    }
+    return {
+      id: uuidv4(),
+      filename: params.filename,
+      originFilename: params.filename,
+      mimetype: params.mimetype,
+      filesize,
+      bucket: params.bucket,
+      path: params.path,
+      storageType: 'gcs',
+      isPrivate: params.isPrivate,
+      createdAt: now,
+      updatedAt: now,
+      ownerId: params.ownerId,
+    };
   }
 
   async downloadAsStream(params: {
@@ -25,8 +67,8 @@ export class GCSStorageProvider implements StorageProvider {
     path: string;
     filename: string;
   }): Promise<Readable> {
-    // TODO: Implement GCS file download as stream
-    throw new Error('Not implemented');
+    const file = gcs.bucket(params.bucket).file(params.path + params.filename);
+    return file.createReadStream();
   }
 
   async downloadAsBuffer(params: {
@@ -34,7 +76,8 @@ export class GCSStorageProvider implements StorageProvider {
     path: string;
     filename: string;
   }): Promise<Buffer> {
-    // TODO: Implement GCS file download as buffer
-    throw new Error('Not implemented');
+    const file = gcs.bucket(params.bucket).file(params.path + params.filename);
+    const [contents] = await file.download();
+    return contents;
   }
 }

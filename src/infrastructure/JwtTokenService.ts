@@ -1,17 +1,22 @@
 /**
  * JwtTokenService implements TokenService using jsonwebtoken.
- * (Stub implementation, to be completed)
  */
 import { TokenService } from '@interfaces/TokenService';
+import jwt from 'jsonwebtoken';
+
+const SECRET = process.env.JWT_SECRET || 'default_secret';
 
 export class JwtTokenService implements TokenService {
   generateToken(payload: Record<string, any>): string {
-    // TODO: Implement JWT token generation
-    throw new Error('Not implemented');
+    // You can add options like expiresIn if payload has exp
+    return jwt.sign(payload, SECRET);
   }
 
   validateToken(token: string): Record<string, any> {
-    // TODO: Implement JWT token validation
-    throw new Error('Not implemented');
+    try {
+      return jwt.verify(token, SECRET) as Record<string, any>;
+    } catch (err) {
+      throw new Error('Invalid or expired token');
+    }
   }
 }
