@@ -18,7 +18,26 @@ npm install ss-media-library
 
 ## Usage Examples
 
-### 1. Upload Public File
+### 1. Setup Storage Providers
+
+#### Local Storage
+
+```typescript
+import { LocalStorageProvider } from '@infrastructure/LocalStorageProvider';
+const storageProvider = new LocalStorageProvider();
+```
+
+#### Google Cloud Storage (GCS)
+
+```typescript
+import { Storage } from '@google-cloud/storage';
+import { GCSStorageProvider } from '@infrastructure/GCSStorageProvider';
+
+const gcs = new Storage({ /* app-specific config here */ });
+const storageProvider = new GCSStorageProvider(gcs);
+```
+
+### 2. Upload Public File
 
 ```typescript
 const uploadPublic = new UploadPublicFile(storageProvider);
@@ -32,7 +51,7 @@ const publicMetadata = await uploadPublic.execute({
 console.log(publicMetadata);
 ```
 
-### 2. Upload Private File (with ownerId and tokenPayload)
+### 3. Upload Private File (with ownerId and tokenPayload)
 
 ```typescript
 const uploadPrivate = new UploadPrivateFile(storageProvider, tokenService);
@@ -53,7 +72,7 @@ const privateMetadata = await uploadPrivate.execute({
 console.log(privateMetadata);
 ```
 
-### 3. Upload Private File (minimal)
+### 4. Upload Private File (minimal)
 
 ```typescript
 const privateMetadata = await uploadPrivate.execute({
