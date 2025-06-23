@@ -184,6 +184,7 @@ try {
 ```
 
 **Typical error response:**
+
 ```json
 {
   "error": "Invalid or expired token"
