@@ -1,0 +1,25 @@
+# Ignore source files
+src/
+tests/
+__tests__/
+*.spec.ts
+*.test.ts
+
+# Ignore config and build files
+tsconfig.json
+tsconfig.*.json
+.eslintrc*
+.prettierrc*
+jest.config.*
+coverage/
+node_modules/
+.env
+.env.*
+
+# Ignore documentation and misc
+README.md
+.gitignore
+.npmignore
+.vscode/
+.idea/
+.DS_Store
