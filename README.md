@@ -3,6 +3,7 @@
 A TypeScript media library for uploading and downloading public/private files, supporting local and Google Cloud Storage (GCS) backends. Designed with Clean Architecture, CQRS, and SOLID principles.
 
 ## Features
+
 - Upload public and private files
 - Download files as stream or buffer
 - Pluggable storage providers (local, GCS)
@@ -11,7 +12,7 @@ A TypeScript media library for uploading and downloading public/private files, s
 
 ## Installation
 
-```
+```bash
 npm install ss-media-library
 ```
 
@@ -71,11 +72,14 @@ const privateMetadata = await uploadPrivate.execute({
 
 - Tests are written using Jest.
 - To run tests:
-  ```
+
+  ```bash
   npm test
   ```
+
 - To check coverage:
-  ```
+
+  ```bash
   npm run coverage
   ```
 
