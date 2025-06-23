@@ -7,9 +7,13 @@ import { Readable } from 'stream';
 import { Storage } from '@google-cloud/storage';
 import { v4 as uuidv4 } from 'uuid';
 
-const gcs = new Storage();
-
 export class GCSStorageProvider implements StorageProvider {
+  private gcs: Storage;
+
+  constructor(gcs: Storage) {
+    this.gcs = gcs;
+  }
+
   async upload(params: {
     file: Buffer | Readable;
     bucket: string;
@@ -19,30 +23,28 @@ export class GCSStorageProvider implements StorageProvider {
     isPrivate: boolean;
     ownerId?: string;
   }): Promise<FileMetadata> {
-    const bucket = gcs.bucket(params.bucket);
+    const bucket = this.gcs.bucket(params.bucket);
     const destPath = params.path + params.filename;
     const file = bucket.file(destPath);
     const now = new Date();
     let filesize = 0;
     if (Buffer.isBuffer(params.file)) {
+      await file.save(params.file, { contentType: params.mimetype });
       filesize = params.file.length;
-      await new Promise<void>((resolve, reject) => {
-        const uploadStream = file.createWriteStream({ metadata: { contentType: params.mimetype } });
-        uploadStream.on('error', reject);
-        uploadStream.on('finish', resolve);
-        uploadStream.end(params.file);
-      });
     } else if (params.file instanceof Readable) {
       await new Promise<void>((resolve, reject) => {
-        const uploadStream = file.createWriteStream({ metadata: { contentType: params.mimetype } });
+        const writeStream = file.createWriteStream({ contentType: params.mimetype });
         (params.file as Readable).on('data', (chunk: Buffer) => {
           filesize += chunk.length;
         });
         (params.file as Readable).on('error', reject);
-        uploadStream.on('error', reject);
-        uploadStream.on('finish', resolve);
-        (params.file as Readable).pipe(uploadStream);
+        writeStream.on('error', reject);
+        writeStream.on('finish', resolve);
+        (params.file as Readable).pipe(writeStream);
       });
+      // Optionally, get file size from GCS metadata if needed
+      const [metadata] = await file.getMetadata();
+      filesize = Number(metadata.size) || 0;
     } else {
       throw new Error('Invalid file type: must be Buffer or Readable');
     }
@@ -67,7 +69,7 @@ export class GCSStorageProvider implements StorageProvider {
     path: string;
     filename: string;
   }): Promise<Readable> {
-    const file = gcs.bucket(params.bucket).file(params.path + params.filename);
+    const file = this.gcs.bucket(params.bucket).file(params.path + params.filename);
     return file.createReadStream();
   }
 
@@ -76,7 +78,7 @@ export class GCSStorageProvider implements StorageProvider {
     path: string;
     filename: string;
   }): Promise<Buffer> {
-    const file = gcs.bucket(params.bucket).file(params.path + params.filename);
+    const file = this.gcs.bucket(params.bucket).file(params.path + params.filename);
     const [contents] = await file.download();
     return contents;
   }
